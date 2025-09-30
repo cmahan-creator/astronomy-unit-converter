@@ -1,0 +1,166 @@
+<div style="border:1px solid #ccc; padding:1em; max-width:460px; border-radius:10px; background:#f9f9f9; font-family:sans-serif;">
+  <h3>Astronomy Unit Converter</h3>
+
+  <label for="value">Enter value:</label>
+  <input type="number" id="value" placeholder="Enter number" style="width:100%;margin:5px 0;">
+
+  <label for="from">From:</label>
+  <select id="from" style="width:100%;margin:5px 0;">
+    <optgroup label="Distance">
+      <option value="km">Kilometers (km)</option>
+      <option value="mi">Miles (mi)</option>
+      <option value="au">Astronomical Units (AU)</option>
+      <option value="ly">Light-years (ly)</option>
+      <option value="pc">Parsecs (pc)</option>
+    </optgroup>
+    <optgroup label="Speed (Miles)">
+      <option value="mi_s">mi/s</option>
+      <option value="mi_min">mi/min</option>
+      <option value="mi_hr">mi/hr</option>
+      <option value="mi_day">mi/day</option>
+      <option value="mi_yr">mi/year</option>
+    </optgroup>
+    <optgroup label="Speed (Kilometers)">
+      <option value="km_s">km/s</option>
+      <option value="km_min">km/min</option>
+      <option value="km_hr">km/hr</option>
+      <option value="km_day">km/day</option>
+      <option value="km_yr">km/year</option>
+    </optgroup>
+  </select>
+
+  <label for="to">To:</label>
+  <select id="to" style="width:100%;margin:5px 0;">
+    <optgroup label="Distance">
+      <option value="km">Kilometers (km)</option>
+      <option value="mi">Miles (mi)</option>
+      <option value="au">Astronomical Units (AU)</option>
+      <option value="ly">Light-years (ly)</option>
+      <option value="pc">Parsecs (pc)</option>
+    </optgroup>
+    <optgroup label="Speed (Miles)">
+      <option value="mi_s">mi/s</option>
+      <option value="mi_min">mi/min</option>
+      <option value="mi_hr">mi/hr</option>
+      <option value="mi_day">mi/day</option>
+      <option value="mi_yr">mi/year</option>
+    </optgroup>
+    <optgroup label="Speed (Kilometers)">
+      <option value="km_s">km/s</option>
+      <option value="km_min">km/min</option>
+      <option value="km_hr">km/hr</option>
+      <option value="km_day">km/day</option>
+      <option value="km_yr">km/year</option>
+    </optgroup>
+  </select>
+
+  <label for="displayMode">Display Mode:</label>
+  <select id="displayMode" style="width:100%;margin:5px 0;">
+    <option value="both">Standard + Scientific</option>
+    <option value="standard">Standard Only</option>
+    <option value="sci">Scientific Only</option>
+  </select>
+
+  <div style="margin-top:10px;">
+    <button onclick="convert()" style="padding:5px 10px;">Convert</button>
+    <button onclick="resetFields()" style="padding:5px 10px; margin-left:5px;">Clear</button>
+  </div>
+
+  <div id="output" style="margin-top:15px; font-weight:bold;"></div>
+</div>
+
+<script>
+  // Distance constants
+  const AU_IN_KM = 149597870.7;
+  const LY_IN_KM = 9.4607e12;
+  const PC_IN_KM = 3.0857e13;
+  const KM_IN_MI = 1.60934;
+
+  // Time constants
+  const SECONDS_IN_MIN = 60;
+  const SECONDS_IN_HOUR = 3600;
+  const SECONDS_IN_DAY = 86400;
+  const SECONDS_IN_YEAR = 31557600; // 365.25 days
+
+  function convert() {
+    const value = parseFloat(document.getElementById("value").value);
+    const from = document.getElementById("from").value;
+    const to = document.getElementById("to").value;
+    const mode = document.getElementById("displayMode").value;
+
+    if (isNaN(value)) {
+      document.getElementById("output").innerText = "Please enter a valid number.";
+      return;
+    }
+
+    // --- Step 1: Normalize input ---
+    let baseValue, category;
+
+    if (["km", "mi", "au", "ly", "pc"].includes(from)) {
+      category = "distance";
+      if (from === "km") baseValue = value;
+      else if (from === "mi") baseValue = value * KM_IN_MI;
+      else if (from === "au") baseValue = value * AU_IN_KM;
+      else if (from === "ly") baseValue = value * LY_IN_KM;
+      else if (from === "pc") baseValue = value * PC_IN_KM;
+    } else {
+      category = "speed";
+      if (from.startsWith("mi")) {
+        let milesPerSec;
+        if (from === "mi_s") milesPerSec = value;
+        if (from === "mi_min") milesPerSec = value / SECONDS_IN_MIN;
+        if (from === "mi_hr") milesPerSec = value / SECONDS_IN_HOUR;
+        if (from === "mi_day") milesPerSec = value / SECONDS_IN_DAY;
+        if (from === "mi_yr") milesPerSec = value / SECONDS_IN_YEAR;
+        baseValue = milesPerSec * KM_IN_MI; // normalize to km/s
+      } else {
+        if (from === "km_s") baseValue = value;
+        if (from === "km_min") baseValue = value / SECONDS_IN_MIN;
+        if (from === "km_hr") baseValue = value / SECONDS_IN_HOUR;
+        if (from === "km_day") baseValue = value / SECONDS_IN_DAY;
+        if (from === "km_yr") baseValue = value / SECONDS_IN_YEAR;
+      }
+    }
+
+    // --- Step 2: Convert to target ---
+    let result;
+    if (category === "distance") {
+      if (to === "km") result = baseValue;
+      else if (to === "mi") result = baseValue / KM_IN_MI;
+      else if (to === "au") result = baseValue / AU_IN_KM;
+      else if (to === "ly") result = baseValue / LY_IN_KM;
+      else if (to === "pc") result = baseValue / PC_IN_KM;
+    } else {
+      if (to.startsWith("mi")) {
+        const miPerSec = baseValue / KM_IN_MI;
+        if (to === "mi_s") result = miPerSec;
+        if (to === "mi_min") result = miPerSec * SECONDS_IN_MIN;
+        if (to === "mi_hr") result = miPerSec * SECONDS_IN_HOUR;
+        if (to === "mi_day") result = miPerSec * SECONDS_IN_DAY;
+        if (to === "mi_yr") result = miPerSec * SECONDS_IN_YEAR;
+      } else {
+        if (to === "km_s") result = baseValue;
+        if (to === "km_min") result = baseValue * SECONDS_IN_MIN;
+        if (to === "km_hr") result = baseValue * SECONDS_IN_HOUR;
+        if (to === "km_day") result = baseValue * SECONDS_IN_DAY;
+        if (to === "km_yr") result = baseValue * SECONDS_IN_YEAR;
+      }
+    }
+
+    // --- Step 3: Display output ---
+    let outputText = "";
+    if (mode === "standard" || mode === "both") {
+      outputText += `Standard: ${result.toLocaleString("en-US")} ${to}<br>`;
+    }
+    if (mode === "sci" || mode === "both") {
+      outputText += `Scientific: ${result.toExponential(3)} ${to}`;
+    }
+
+    document.getElementById("output").innerHTML = outputText;
+  }
+
+  function resetFields() {
+    document.getElementById("value").value = "";
+    document.getElementById("output").innerText = "";
+  }
+</script>
